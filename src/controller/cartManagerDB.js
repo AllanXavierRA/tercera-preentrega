@@ -1,4 +1,5 @@
 import { request, response } from "express";
+import axios from "axios";
 import mongoose from "mongoose";
 import { ObjectId } from 'mongodb';
 import { Cart } from "../dao/model/cart.js"
@@ -30,6 +31,11 @@ const cartGet = async( req=request, res=response) => {
     })
 }
 
+const deleteProductOfCart = async(cid, pid) => {
+
+    const cart = await Cart.findByIdAndUpdate( cid, { $pull: {products: {id: pid}}}, {new: true});
+
+}
 
 const cartPurchaser = async(req=request,res=response) => {
     const { cid } = req.params;
@@ -48,6 +54,8 @@ const cartPurchaser = async(req=request,res=response) => {
                 try {
                     await foundProduct.save();
                     monto.push(product.quantity * foundProduct.price);
+                    console.log(foundProduct._id);
+                    deleteProductOfCart(cid, foundProduct._id)
                     return foundProduct;
                 } catch (error) {
                     console.error("Error al guardar el producto:", error);
@@ -58,6 +66,7 @@ const cartPurchaser = async(req=request,res=response) => {
             }
         })
     )
+
 
     let num = 0
     monto.forEach(numero => {
@@ -77,9 +86,7 @@ const cartPurchaser = async(req=request,res=response) => {
 
     await ticket.save();
 
-    // ELIMINANDO EL PRODUCTO DEL CARRITO
 
-    
 
     res.json({
         cart
@@ -133,7 +140,7 @@ const cartDelete = async ( req=request, res=response ) => {
         return res.status(400).json({ message: 'El ID del producto no es válido' })
     }
 
-    const cart = await Cart.findByIdAndUpdate( cid, { $pull: {products: pid}}, {new: true});
+    const cart = await Cart.findByIdAndUpdate( cid, { $pull: {products: {id: pid}}}, {new: true});
 
     if(!cart){
         return res.status(400).json({message: "Carrito no encontrado"})
