@@ -47,7 +47,7 @@ router.get('/successUser', (req, res) => {
 
 router.post('/login', passport.authenticate('local', {
   failureRedirect: '/error',
-  successRedirect: '/successUser'
+  // successRedirect: '/successUser'
 }), (req, res) => {
   
   req.login(req.user, err => {
@@ -59,6 +59,16 @@ router.post('/login', passport.authenticate('local', {
     }
   });
 });
+
+
+
+router.get('/current', async (req, res) => {
+  const passportUser = req.session.passport.user;
+  const user = await User.findById(passportUser)
+  res.json({
+    user
+  })
+})
 
 
 export default router

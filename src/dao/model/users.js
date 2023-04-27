@@ -19,7 +19,8 @@ const UserSchema =  Schema({
         default: 'user'
     },
     cartId: {
-        type: String
+        type: String,
+        ref: 'Cart'
     }
 })
 

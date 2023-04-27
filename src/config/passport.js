@@ -33,7 +33,6 @@ export const localStrategy = new LocalStrategy({
     usernameField: 'email',
 
 }, async(email, password, done) => {
-console.log(`Local strategy`, email, password);
     const user = await User.findOne({email: email});
     if(!user){ 
         console.log(`User not found`);
@@ -41,7 +40,6 @@ console.log(`Local strategy`, email, password);
     }else{
         const match = await user.matchPassword(password);
         if(match){
-            console.log(`Password matched`);
             return done(null, user)
         }else{
             console.log(`Password not matched`);

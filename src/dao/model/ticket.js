@@ -22,12 +22,11 @@ const TicketSchema = new Schema({
 export const Ticket = model('Ticket', TicketSchema);
 
 
-const generadorTicketUnico = async() => {
+export const generadorTicketUnico = async() => {
 
     let code = randomstring.generate(8);
     let ticket = await Ticket.findOne({ code: code }).exec();
 
-    console.log(ticket);
 
     while (ticket) {
         

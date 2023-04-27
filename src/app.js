@@ -37,6 +37,9 @@ app.use(passport.session());
 passport.use('local', localStrategy);
 passport.serializeUser(serializeUser);
 passport.deserializeUser(deserializeUser);
+app.use((req, res, next) => {
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))

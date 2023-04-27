@@ -2,9 +2,9 @@ import { request, response } from "express";
 import mongoose from "mongoose";
 import { ObjectId } from 'mongodb';
 import { Cart } from "../dao/model/cart.js"
+import { User } from '../dao/model/users.js'
 import { Producto } from "../dao/model/producto.js";
-import { Ticket } from "../dao/model/ticket.js";
-
+import { Ticket, generadorTicketUnico } from "../dao/model/ticket.js";
 
 const cartPost = async( req = request, res = response) => {
     const body = req.body;
@@ -36,16 +36,18 @@ const cartPurchaser = async(req=request,res=response) => {
     const body = req.body;
     const cart = await Cart.findById(cid).populate('products.id')
 
+    let monto = [];
     
+    // RESTANDO LA CANTIDAD DE PRODUCTOS DEL STOCK
     const cartStockProd = await Promise.all(
         cart.products.map(async (product) => {
             const foundProduct = await Producto.findById(product.id._id);
-            if(foundProduct.stock > product.quantity){
+            if(foundProduct.stock > product.quantity && foundProduct.stock != 0){
                 const stock =  (foundProduct.stock - product.quantity)
                 foundProduct['stock'] = stock;
                 try {
                     await foundProduct.save();
-                    console.log("Producto guardado exitosamente.");
+                    monto.push(product.quantity * foundProduct.price);
                     return foundProduct;
                 } catch (error) {
                     console.error("Error al guardar el producto:", error);
@@ -57,21 +59,33 @@ const cartPurchaser = async(req=request,res=response) => {
         })
     )
 
+    let num = 0
+    monto.forEach(numero => {
+        num += numero
+    })
 
+
+    const user = await User.find({cartId: cid})
 
 
     const ticket = new Ticket({
-        amount: 10,
-        purchaser: 'allanraza@hotmail.com'
+        amount: num,
+        purchaser: user[0].email
     })
 
-    console.log(body);
-    // console.log(cartStockProd);
+    ticket.code = await generadorTicketUnico();
+
+    await ticket.save();
+
+    // ELIMINANDO EL PRODUCTO DEL CARRITO
+
+    
 
     res.json({
         cart
     })   
 }
+
 
 const postProductToCart = async( req=request, res=response ) => {
 
@@ -153,10 +167,7 @@ const cartDeleteProducts = async ( req=request, res=response ) => {
 }
 
 
-// const cartPurchaser = async(req=request,res=response) => {
-//     const { cid } = req.params;
-    
-// }
+
 
 export {
     cartPost,
